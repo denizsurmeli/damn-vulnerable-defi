@@ -40,6 +40,16 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        /*
+            Solution:
+            Observe that flashLoan function is asserting that poolBalance equals to balanceBefore.
+            balanceBefore is the amount of DVT that the contract holds.
+            If you directly call transfer from DVT instead of depositFrom in UnstoppableLender,
+            assertion fails and it reverts.
+            Thus no one can call flashLoan. 
+        */
+        await this.token.connect(attacker).transfer(this.pool.address,INITIAL_ATTACKER_TOKEN_BALANCE);
+
     });
 
     after(async function () {
