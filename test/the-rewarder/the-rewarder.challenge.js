@@ -75,7 +75,21 @@ describe('[Challenge] The rewarder', function () {
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
 
-        //iterate to the next round 
+        /**
+         * Exploit:
+         * Similar exploit as in side entrance. Flash loan, deposit, withdraw , collect the reward tokens in the round.
+         * 
+         * Solution:
+         * Using locking and mutual exclusion methods again. 
+         * 
+         * As a general note, flash loans are happening at the state changes, not in states. You should be 
+         * very certain at your before and after states in order to allow such great power to be used. Also,
+         * between transistions, mutexes can solve great deal of problems like these. 
+         * 
+         * This article can give some insights: http://www.diva-portal.org/smash/get/diva2:1338660/FULLTEXT01.pdf
+         * This site has some common attacks, like in these examples, and their preventations. : https://preventflashloanattacks.com/
+         * 
+         */
         await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
         await this.attackContract.connect(attacker).attack();
     });

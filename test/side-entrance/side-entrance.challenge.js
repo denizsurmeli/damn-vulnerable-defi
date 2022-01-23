@@ -27,8 +27,19 @@ describe('[Challenge] Side entrance', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
-        //execute calls deposit then withdraw during the flashLoan
-        //everything happens at constructor, so exploit will pass without a problem.
+        /**
+         * Exploit:
+         * Deposit and withdraw functions can be called during the flash loan. By receiving a flash loan,
+         * just deposit the loan and withdraw it. Recall the unstoppable. While we suggested to check the balance directly
+         * rather than tracking the amounts using storage variables, in this situation, creates the exploit.
+         * 
+         * Solution:
+         *  Mutexes can be used. 
+         *  State-freezing mechanisms like mutexes can guard the depositing from flash loans. 
+         *  
+         * 
+         */
+
         this.attackerContract.connect(attacker).attack();
 
     });

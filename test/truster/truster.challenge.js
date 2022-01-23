@@ -31,6 +31,15 @@ describe('[Challenge] Truster', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE  */
+        /**
+         * Exploit:
+         * The flash loan contract allows any call to any external contract. This gives a greater
+         * surface for exploitation.
+         * 
+         * Solution:
+         * Check the subject contracts, force contracts to comply with an interface that is designed
+         * to be safer for the pool. Reduce the attack surface as much as you can. 
+         */
         await this.attackContract.connect(attacker).attack();
     });
 
