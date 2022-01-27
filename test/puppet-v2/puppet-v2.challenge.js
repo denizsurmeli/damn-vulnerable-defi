@@ -83,19 +83,6 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
-        /**
-         * Attack Scenario:
-         *  -> We will manipulate the borrow function again. 
-         *  -> Drain the pair, such that amountA.mul(reserveB) / reserveA == 0.
-         *  -> Only way, since there is a integer division, amountA.mul(reserveB)  < reserveA 
-         *  -> In the uniswap pair, current situation is 10 WETH/100 TOKEN.
-         *  -> Attacker has 10000 TOKEN.
-         *  -> Swap 100 TOKEN for 10 WETH.
-         *  -> Uniswap Pair now has 0 WETH/200 TOKEN.
-         *  -> Quote will return amountA*0(WETH_Amount)/200 == 0.
-         *  -> Borrow with 0 value. 
-         *  -> Attack is complete.
-         */
 
         const PoolV2AttackFactory = await ethers.getContractFactory('PuppetV2Attack',attacker);
         this.attackContract =  await PoolV2AttackFactory.deploy(
